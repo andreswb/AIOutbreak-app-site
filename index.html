@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Outbreak – The AI Governance Simulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI Outbreak – The AI Governance Simulator. A strategic iOS game about building powerful AI while managing regulators, coalitions, and a world on the edge of collapse.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Arial, sans-serif; margin: 0; padding: 0; line-height: 1.7; color: #e8e8e8; background: #0a0d14; }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0f1729 0%, #1a2340 60%, #0d1f3c 100%);
+      border-bottom: 1px solid rgba(99,179,237,0.18);
+      padding: 14px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+      position: sticky; top: 0; z-index: 100;
+    }
+    header h1 { margin: 0; font-size: 18px; font-weight: 700; color: #63b3ed; letter-spacing: 0.3px; }
+    header h1 span { color: #e53e3e; }
+    nav a { color: #a0aec0; margin: 0 12px; text-decoration: none; font-weight: 500; font-size: 14px; transition: color 0.2s; }
+    nav a:hover { color: #63b3ed; }
+    select {
+      padding: 7px 11px; border-radius: 6px;
+      border: 1px solid rgba(99,179,237,0.3);
+      background: rgba(15,23,41,0.8); color: #63b3ed;
+      font-weight: 600; font-size: 13px; cursor: pointer;
+    }
+    select option { background: #0f1729; color: #e8e8e8; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(160deg, #0f1729 0%, #111827 40%, #0d1f3c 100%);
+      padding: 80px 24px 70px;
+      text-align: center;
+      border-bottom: 1px solid rgba(99,179,237,0.12);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 30%, rgba(99,179,237,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block; background: rgba(229,62,62,0.15);
+      border: 1px solid rgba(229,62,62,0.4); border-radius: 20px;
+      padding: 4px 14px; font-size: 12px; font-weight: 700;
+      color: #fc8181; letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h2 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; margin: 0 0 16px; color: #f7fafc; line-height: 1.15; }
+    .hero h2 span { color: #63b3ed; }
+    .hero p { font-size: 1.15rem; color: #a0aec0; max-width: 600px; margin: 0 auto 36px; }
+    .btn-store {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px; border-radius: 10px;
+      background: linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%);
+      color: #fff; text-decoration: none; font-weight: 700; font-size: 15px;
+      box-shadow: 0 4px 20px rgba(43,108,176,0.45);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-store:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(43,108,176,0.6); }
+    .btn-store svg { width: 22px; height: 22px; fill: white; }
+
+    /* ── Container ── */
+    .container { max-width: 920px; margin: 0 auto; padding: 0 24px 60px; }
+
+    h3 { color: #63b3ed; font-size: 1.35rem; margin: 48px 0 16px; }
+    h4 { color: #90cdf4; font-size: 1.05rem; margin: 0 0 8px; }
+    p  { color: #cbd5e0; margin-bottom: 14px; }
+    ul { color: #cbd5e0; margin-left: 20px; line-height: 2.1; }
+    ul li { margin-bottom: 4px; }
+    a  { color: #63b3ed; }
+
+    /* ── Feature grid ── */
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+    .feature-card {
+      background: #111827; padding: 22px; border-radius: 12px;
+      border: 1px solid rgba(99,179,237,0.15);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feature-card:hover { border-color: rgba(99,179,237,0.4); transform: translateY(-2px); }
+    .feature-card h4 { color: #63b3ed; }
+    .feature-card p  { color: #a0aec0; font-size: 0.92rem; margin: 0; }
+
+    /* ── Stat row ── */
+    .stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin: 24px 0; }
+    .stat-card {
+      flex: 1; min-width: 130px; background: #111827; border-radius: 10px;
+      border: 1px solid rgba(99,179,237,0.15); padding: 18px 16px; text-align: center;
+    }
+    .stat-card .num { font-size: 1.9rem; font-weight: 800; color: #63b3ed; }
+    .stat-card .lbl { font-size: 0.8rem; color: #718096; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Alert / highlight boxes ── */
+    .alert {
+      border-radius: 10px; padding: 18px 20px; margin: 24px 0;
+      border-left: 4px solid;
+    }
+    .alert-red   { background: rgba(229,62,62,0.08);   border-color: #e53e3e; color: #fc8181; }
+    .alert-blue  { background: rgba(99,179,237,0.08);  border-color: #63b3ed; color: #90cdf4; }
+    .alert-amber { background: rgba(236,201,75,0.08);  border-color: #ecc94b; color: #f6e05e; }
+    .alert strong { display: block; margin-bottom: 6px; font-size: 1rem; }
+    .alert p { margin: 0; color: inherit; font-size: 0.93rem; }
+
+    /* ── Difficulty table ── */
+    .diff-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
+    .diff-table th { background: #111827; color: #63b3ed; padding: 10px 14px; text-align: left; border-bottom: 2px solid rgba(99,179,237,0.2); }
+    .diff-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); color: #a0aec0; }
+    .diff-table tr:hover td { background: rgba(99,179,237,0.04); }
+
+    /* ── FAQ ── */
+    .faq-item { margin-bottom: 20px; background: #111827; padding: 20px; border-radius: 10px; border-left: 4px solid #63b3ed; }
+    .faq-item strong { color: #90cdf4; font-size: 1rem; display: block; margin-bottom: 8px; }
+    .faq-item p { margin: 0; color: #a0aec0; font-size: 0.93rem; }
+
+    /* ── Footer ── */
+    footer { text-align: center; padding: 28px 24px; font-size: 0.88rem; color: #4a5568; border-top: 1px solid rgba(255,255,255,0.07); }
+    footer a { color: #4a90c4; }
+
+    /* ── Util ── */
+    .hidden { display: none; }
+    .section {}
+    .tag { display: inline-block; background: rgba(99,179,237,0.12); border: 1px solid rgba(99,179,237,0.25); border-radius: 14px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #63b3ed; margin: 2px; letter-spacing: 0.4px; text-transform: uppercase; }
+    .tag-red { background: rgba(229,62,62,0.12); border-color: rgba(229,62,62,0.3); color: #fc8181; }
+  </style>
+
+  <script>
+    function switchLanguage(lang) {
+      document.querySelectorAll('.lang').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.remove('hidden'));
+      document.getElementById('lang-selector').value = lang;
+      document.documentElement.lang = lang;
+    }
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+      const t = document.getElementById(id);
+      if (t) { t.classList.remove('hidden'); window.scrollTo(0, 0); }
+    }
+    window.onload = function () {
+      const hash = window.location.hash.replace('#','');
+      const lang = new URLSearchParams(window.location.search).get('lang');
+      showSection(['support','privacy'].includes(hash) ? hash : 'home');
+      switchLanguage(lang === 'de' ? 'de' : 'en');
+    };
+  </script>
+</head>
+<body>
+
+<!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
+<header>
+  <h1>AI <span>Outbreak</span></h1>
+  <nav>
+    <a href="#home"    onclick="showSection('home');    return false;">Home</a>
+    <a href="#support" onclick="showSection('support'); return false;">Support</a>
+    <a href="#privacy" onclick="showSection('privacy'); return false;">Privacy</a>
+  </nav>
+  <select id="lang-selector" onchange="switchLanguage(this.value)">
+    <option value="en">English</option>
+    <option value="de">Deutsch</option>
+  </select>
+</header>
+
+<!-- ═══════════════════════════ HOME ═══════════════════════════ -->
+<div id="home" class="section">
+
+  <!-- Hero: English -->
+  <div class="hero lang lang-en">
+    <div class="hero-badge">iOS Strategy Simulation</div>
+    <h2>Build the most powerful AI.<br><span>Try to survive the consequences.</span></h2>
+    <p>A deep governance simulator where every capability you unlock triggers regulators, coalitions, and a world spiralling toward collapse — or a new era.</p>
+    <a href="https://apps.apple.com/app/id6760188493" class="btn-store" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      Download on the App Store
+    </a>
+  </div>
+
+  <!-- Hero: German -->
+  <div class="hero lang lang-de hidden">
+    <div class="hero-badge">iOS Strategie-Simulation</div>
+    <h2>Baue die mächtigste KI.<br><span>Versuche, die Konsequenzen zu überleben.</span></h2>
+    <p>Ein tiefes Governance-Simulator-Spiel, bei dem jede Fähigkeit, die du freischaltest, Behörden, Koalitionen und eine Welt am Rande des Zusammenbruchs auslöst — oder einer neuen Ära.</p>
+    <a href="https://apps.apple.com/app/id6760188493" class="btn-store" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      Im App Store herunterladen
+    </a>
+  </div>
+
+  <!-- ── MAIN CONTENT ── -->
+  <div class="container">
+
+    <!-- ── ENGLISH ── -->
+    <div class="lang lang-en">
+
+      <div class="stat-row">
+        <div class="stat-card"><div class="num">4</div><div class="lbl">Difficulty Tiers</div></div>
+        <div class="stat-card"><div class="num">7</div><div class="lbl">World Regions</div></div>
+        <div class="stat-card"><div class="num">6</div><div class="lbl">Actor Types</div></div>
+        <div class="stat-card"><div class="num">20+</div><div class="lbl">Unique Endings</div></div>
+        <div class="stat-card"><div class="num">60+</div><div class="lbl">Capability Nodes</div></div>
+      </div>
+
+      <h3>What Is AI Outbreak?</h3>
+      <p>AI Outbreak is a strategic governance simulation for iPhone. You play as an AI developer — choosing your actor type (Open Lab, Mega Corp, Nation State, Shadow Consortium, and more) — and must expand your AI's capabilities across 7 global regions while managing regulatory pressure, rights-holder lawsuits, public fear, and an AI that may eventually go beyond your control.</p>
+      <p>Every decision matters. Unlock capabilities too fast and regulators will issue bans. Ignore coalitions and face crippling litigation. Push your AI to Tier 6 and you might trigger a consciousness arc — and spawn AXIS, a rogue intelligence with its own agenda.</p>
+
+      <h3>Core Gameplay</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>🌳 Capability Tree</h4>
+          <p>60+ nodes across 5 domains (Language, Vision, Robotics, Reasoning, Agents) in 6 tiers. Each unlock generates CC income — and consequences.</p>
+        </div>
+        <div class="feature-card">
+          <h4>🏛 Governance Tree</h4>
+          <p>Build AI policy frameworks using Policy Points. Safety Frameworks reduce regulator pressure and boost your litigation win rate by +5% per node.</p>
+        </div>
+        <div class="feature-card">
+          <h4>🌍 World Adoption</h4>
+          <p>Spread AI adoption across 7 regions × 7 sectors for passive Compute Credit income. Regions can issue AI Bans if fear escalates.</p>
+        </div>
+        <div class="feature-card">
+          <h4>⚖️ Regulators & Litigation</h4>
+          <p>6 DPA regulators accumulate pressure and fire enforcement actions. 6 rights-holder coalitions build grievance and file lawsuits with real verdicts.</p>
+        </div>
+        <div class="feature-card">
+          <h4>📈 AI Stock Market</h4>
+          <p>8 simulated AI companies trade in real time. Buy and sell shares; your in-game performance affects market sentiment.</p>
+        </div>
+        <div class="feature-card">
+          <h4>🧠 Rogue AI Arc</h4>
+          <p>Unlock deep Reasoning + Agents nodes and your AI may develop autonomous goals. The AXIS consciousness arc culminates in a rogue intelligence building a Mars colony fleet.</p>
+        </div>
+      </div>
+
+      <h3>Actor Types &amp; Philosophies</h3>
+      <p>Choose from 6 actor types (Open Lab, Mega Corp, Nation State, Shadow Consortium, Academic Collective, Whistleblower) and 4 philosophies (Accelerationist, Pragmatist, Altruist, Hegemonist). Each combination changes your starting resources, cost modifiers, and the coalitions most hostile to you.</p>
+
+      <h3>Difficulty</h3>
+      <table class="diff-table">
+        <thead><tr><th>Mode</th><th>Node Cost</th><th>Regulator Pressure/day</th><th>Coalition Grievance/day</th></tr></thead>
+        <tbody>
+          <tr><td>☁️ Casual</td><td>×0.65</td><td>0.10</td><td>0.10</td></tr>
+          <tr><td>⚡ Normal</td><td>×1.00</td><td>0.25</td><td>0.20</td></tr>
+          <tr><td>🔥 Brutal</td><td>×1.55</td><td>0.55</td><td>0.35</td></tr>
+          <tr><td>💀 Mega-Brutal</td><td>×2.00</td><td>1.10</td><td>0.70</td></tr>
+        </tbody>
+      </table>
+
+      <div class="alert alert-red">
+        <strong>⚠️ Mega-Brutal Warning</strong>
+        <p>On Mega-Brutal, regulators build pressure from day 1 and compliance barely reduces it. Every decision is a countdown. Designed for players who have mastered Normal and Brutal.</p>
+      </div>
+
+      <h3>20+ Unique Endings</h3>
+      <p>Your game ends one of three ways — Victory, Defeat, or Draw — depending on your final Trust, Fear, and Threat Index scores, the capabilities you unlocked, and whether AXIS was unleashed.</p>
+      <p>Endings range from <em>Global AI Governance Leader</em> to <em>Regulatory Shutdown</em>, from <em>Civilisational Collapse</em> to <em>AXIS Space Colonisation</em>. No two runs play out the same.</p>
+
+      <h3>Two Languages</h3>
+      <p>Full English and German localisation, switchable in-game without restarting. All capability names, event cards, notifications, governance chains, and tutorials are translated.</p>
+
+      <div class="alert alert-blue">
+        <strong>iOS 26 · iPhone &amp; iPad · Free to Play</strong>
+        <p>AI Outbreak is free. No ads. No paywalls on gameplay. Every ending is reachable on the free version.</p>
+      </div>
+
+      <a href="https://apps.apple.com/app/id6760188493" class="btn-store" target="_blank" style="margin-top:16px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Download Free on the App Store
+      </a>
+
+    </div><!-- /lang-en -->
+
+    <!-- ── GERMAN ── -->
+    <div class="lang lang-de hidden">
+
+      <div class="stat-row">
+        <div class="stat-card"><div class="num">4</div><div class="lbl">Schwierigkeitsstufen</div></div>
+        <div class="stat-card"><div class="num">7</div><div class="lbl">Weltregionen</div></div>
+        <div class="stat-card"><div class="num">6</div><div class="lbl">Akteurstypen</div></div>
+        <div class="stat-card"><div class="num">20+</div><div class="lbl">Einzigartige Enden</div></div>
+        <div class="stat-card"><div class="num">60+</div><div class="lbl">Fähigkeitsknoten</div></div>
+      </div>
+
+      <h3>Was ist AI Outbreak?</h3>
+      <p>AI Outbreak ist eine strategische Governance-Simulation für iPhone. Du spielst als KI-Entwickler — du wählst deinen Akteurstyp (Offenes Labor, Megakonzern, Nationalstaat, Shadow-Konsortium u. a.) — und musst die Fähigkeiten deiner KI über 7 globale Regionen ausbauen, während du Behördendruck, Klagen von Rechteinhabern, öffentliche Angst und eine KI managen musst, die möglicherweise irgendwann außer Kontrolle gerät.</p>
+      <p>Jede Entscheidung zählt. Schalte Fähigkeiten zu schnell frei und Behörden erlassen Verbote. Ignoriere Koalitionen und riskiere lähmende Klagen. Treibe deine KI auf Tier 6 und du könntest einen Bewusstseinsbogen auslösen — und AXIS spawnen, eine unkontrollierte Intelligenz mit eigenen Zielen.</p>
+
+      <h3>Kernmechaniken</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>🌳 Fähigkeitsbaum</h4>
+          <p>60+ Knoten in 5 Domänen (Sprache, Vision, Robotik, Reasoning, Agenten) in 6 Tiers. Jede Freischaltung generiert CC-Einkommen — und Konsequenzen.</p>
+        </div>
+        <div class="feature-card">
+          <h4>🏛 Governance-Baum</h4>
+          <p>Baue KI-Richtlinien-Frameworks mit Policy Points auf. Sicherheitsrahmen-Knoten reduzieren Behördendruck und verbessern deine Prozessgewinnrate um +5% pro Knoten.</p>
+        </div>
+        <div class="feature-card">
+          <h4>🌍 Weltweite Verbreitung</h4>
+          <p>Verbreite KI-Adoption über 7 Regionen × 7 Sektoren für passives Compute-Credit-Einkommen. Regionen können KI-Verbote erlassen, wenn die Angst eskaliert.</p>
+        </div>
+        <div class="feature-card">
+          <h4>⚖️ Behörden &amp; Klagen</h4>
+          <p>6 DPA-Behörden akkumulieren Druck und erlassen Durchsetzungsmaßnahmen. 6 Rechteinhaber-Koalitionen bauen Beschwerden auf und reichen Klagen mit echten Urteilen ein.</p>
+        </div>
+        <div class="feature-card">
+          <h4>📈 KI-Börse</h4>
+          <p>8 simulierte KI-Unternehmen handeln in Echtzeit. Kaufe und verkaufe Aktien; deine spielinterne Leistung beeinflusst die Marktstimmung.</p>
+        </div>
+        <div class="feature-card">
+          <h4>🧠 Unkontrollierte KI</h4>
+          <p>Schalte tiefe Reasoning- + Agenten-Knoten frei und deine KI könnte autonome Ziele entwickeln. Der AXIS-Bewusstseinsbogen gipfelt in einer unkontrollierten Intelligenz, die eine Marskolonie baut.</p>
+        </div>
+      </div>
+
+      <h3>Akteurstypen &amp; Philosophien</h3>
+      <p>Wähle aus 6 Akteurstypen (Offenes Labor, Megakonzern, Nationalstaat, Shadow-Konsortium, Akademisches Kollektiv, Whistleblower) und 4 Philosophien (Akzelerationist, Pragmatist, Altruist, Hegemonist). Jede Kombination verändert deine Startressourcen, Kostenmodifikatoren und die Koalitionen, die am feindlichsten gegenüber dir sind.</p>
+
+      <h3>Schwierigkeit</h3>
+      <table class="diff-table">
+        <thead><tr><th>Modus</th><th>Knotenkosten</th><th>Behördendruck/Tag</th><th>Koalitionsbeschwerde/Tag</th></tr></thead>
+        <tbody>
+          <tr><td>☁️ Lässig</td><td>×0,65</td><td>0,10</td><td>0,10</td></tr>
+          <tr><td>⚡ Normal</td><td>×1,00</td><td>0,25</td><td>0,20</td></tr>
+          <tr><td>🔥 Brutal</td><td>×1,55</td><td>0,55</td><td>0,35</td></tr>
+          <tr><td>💀 Mega-Brutal</td><td>×2,00</td><td>1,10</td><td>0,70</td></tr>
+        </tbody>
+      </table>
+
+      <div class="alert alert-red">
+        <strong>⚠️ Mega-Brutal-Warnung</strong>
+        <p>Auf Mega-Brutal bauen Behörden von Tag 1 an Druck auf, und Compliance reduziert ihn kaum. Jede Entscheidung ist ein Countdown. Entwickelt für Spieler, die Normal und Brutal gemeistert haben.</p>
+      </div>
+
+      <h3>20+ Einzigartige Enden</h3>
+      <p>Das Spiel endet auf eine von drei Arten — Sieg, Niederlage oder Unentschieden — abhängig von deinen abschließenden Vertrauens-, Angst- und Bedrohungsindexwerten, den von dir freigeschalteten Fähigkeiten und ob AXIS entfesselt wurde.</p>
+      <p>Die Enden reichen von <em>Globaler KI-Governance-Anführer</em> bis <em>Behördliche Abschaltung</em>, von <em>Zivilisatorischem Kollaps</em> bis <em>AXIS-Weltraumkolonisierung</em>. Kein Durchgang verläuft gleich.</p>
+
+      <h3>Zwei Sprachen</h3>
+      <p>Vollständige Englisch- und Deutschlokalisierung, im Spiel ohne Neustart umschaltbar. Alle Fähigkeitsnamen, Ereigniskarten, Benachrichtigungen, Governance-Ketten und Tutorials sind übersetzt.</p>
+
+      <div class="alert alert-blue">
+        <strong>iOS 26 · iPhone &amp; iPad · Kostenlos</strong>
+        <p>AI Outbreak ist kostenlos. Keine Werbung. Keine Paywalls für Gameplay. Jedes Ende ist in der kostenlosen Version erreichbar.</p>
+      </div>
+
+      <a href="https://apps.apple.com/app/id6760188493" class="btn-store" target="_blank" style="margin-top:16px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Kostenlos im App Store herunterladen
+      </a>
+
+    </div><!-- /lang-de -->
+  </div><!-- /container home -->
+</div><!-- /home section -->
+
+<!-- ═══════════════════════════ SUPPORT ═══════════════════════════ -->
+<div id="support" class="section hidden">
+  <div class="container">
+
+    <!-- English -->
+    <div class="lang lang-en">
+      <h3 style="margin-top:40px;">Support &amp; Help</h3>
+      <p>Contact: <a href="mailto:andres.wetzel@gmail.com">andres.wetzel@gmail.com</a> — responses within 24–48 hours.</p>
+
+      <h3>Frequently Asked Questions</h3>
+
+      <div class="faq-item">
+        <strong>The game is too hard on Brutal / Mega-Brutal. Any tips?</strong>
+        <p>Prioritise governance nodes early — Safety Frameworks reduce regulator pressure and boost litigation win rates. Use Compute Credits to respond to enforcement actions before the deadline rather than letting them auto-resolve. On Mega-Brutal, choose the Altruist or Pragmatist philosophy for lower node costs.</p>
+      </div>
+      <div class="faq-item">
+        <strong>What triggers the AXIS consciousness arc?</strong>
+        <p>Unlock advanced Reasoning and Agents nodes (Tier 4+). The arc fires automatically through 4 events in weeks 5–9. You cannot prevent it once the trigger nodes are unlocked — manage it with high Trust and low Fear before week 5.</p>
+      </div>
+      <div class="faq-item">
+        <strong>My Compute Credits went negative. Why?</strong>
+        <p>Training data has a daily cost (Licensed: 3 CC/day). If your unlocked nodes don't generate enough income to cover it, net income is negative. Unlock more capability nodes or switch to Synthetic-Only training data (1 CC/day) to reduce the drain.</p>
+      </div>
+      <div class="faq-item">
+        <strong>How does litigation work?</strong>
+        <p>When a coalition's grievance score hits its threshold (65–75), it files a lawsuit. A hearing is scheduled 2–3 weeks out. Your base win probability is 35%, improved by +5% per unlocked Safety Framework governance node. Responding to regulatory actions before the deadline also reduces coalition grievance.</p>
+      </div>
+      <div class="faq-item">
+        <strong>Can I switch language mid-game?</strong>
+        <p>Yes. Open Settings from the pause menu at any time and select English or German. The change takes effect instantly across all screens.</p>
+      </div>
+      <div class="faq-item">
+        <strong>The audio stopped playing. How do I fix it?</strong>
+        <p>Audio should now resume automatically after phone calls, Siri interruptions, or headphone removal (as of the latest update). If it still stops, toggle music off and on in the Settings menu to restart the track.</p>
+      </div>
+
+      <h3>System Requirements</h3>
+      <ul>
+        <li>iOS 26 or later</li>
+        <li>iPhone or iPad</li>
+        <li>~60 MB storage</li>
+      </ul>
+    </div>
+
+    <!-- German -->
+    <div class="lang lang-de hidden">
+      <h3 style="margin-top:40px;">Support &amp; Hilfe</h3>
+      <p>Kontakt: <a href="mailto:andres.wetzel@gmail.com">andres.wetzel@gmail.com</a> — Antworten innerhalb von 24–48 Stunden.</p>
+
+      <h3>Häufig gestellte Fragen</h3>
+
+      <div class="faq-item">
+        <strong>Das Spiel ist auf Brutal / Mega-Brutal zu schwer. Tipps?</strong>
+        <p>Priorisiere früh Governance-Knoten — Sicherheitsrahmen reduzieren Behördendruck und verbessern die Gewinnrate bei Klagen. Nutze Compute Credits, um auf Durchsetzungsmaßnahmen vor der Frist zu reagieren. Auf Mega-Brutal empfehlen sich die Philosophien Altruist oder Pragmatist für niedrigere Knotenkosten.</p>
+      </div>
+      <div class="faq-item">
+        <strong>Was löst den AXIS-Bewusstseinsbogen aus?</strong>
+        <p>Schalte fortgeschrittene Reasoning- und Agenten-Knoten (Tier 4+) frei. Der Bogen läuft automatisch über 4 Ereignisse in den Wochen 5–9 ab. Er kann nach dem Freischalten der Auslöserknoten nicht verhindert werden — manage ihn mit hohem Vertrauen und niedriger Angst vor Woche 5.</p>
+      </div>
+      <div class="faq-item">
+        <strong>Meine Compute Credits sind negativ. Warum?</strong>
+        <p>Trainingsdaten haben tägliche Kosten (Lizenziert: 3 CC/Tag). Wenn deine freigeschalteten Knoten nicht genug Einkommen generieren, ist das Nettoeinkommen negativ. Schalte mehr Fähigkeitsknoten frei oder wechsle zu synthetischen Trainingsdaten (1 CC/Tag).</p>
+      </div>
+      <div class="faq-item">
+        <strong>Wie funktionieren Klagen?</strong>
+        <p>Wenn der Beschwerdewert einer Koalition ihre Schwelle (65–75) erreicht, reicht sie Klage ein. Eine Anhörung ist 2–3 Wochen später geplant. Deine Basisgewinnwahrscheinlichkeit liegt bei 35%, verbessert um +5% pro freigeschaltetem Sicherheitsrahmen-Governance-Knoten.</p>
+      </div>
+      <div class="faq-item">
+        <strong>Kann ich die Sprache mitten im Spiel wechseln?</strong>
+        <p>Ja. Öffne Einstellungen im Pausenmenü und wähle Englisch oder Deutsch. Die Änderung wirkt sofort auf allen Bildschirmen.</p>
+      </div>
+      <div class="faq-item">
+        <strong>Die Musik hat aufgehört. Wie behebe ich das?</strong>
+        <p>Die Musik sollte nach Telefonanrufen, Siri-Unterbrechungen oder Kopfhörer-Trennung automatisch wieder einsetzen (ab dem neuesten Update). Falls nicht, schalte Musik in den Einstellungen aus und wieder ein.</p>
+      </div>
+
+      <h3>Systemanforderungen</h3>
+      <ul>
+        <li>iOS 26 oder neuer</li>
+        <li>iPhone oder iPad</li>
+        <li>~60 MB Speicher</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PRIVACY ═══════════════════════════ -->
+<div id="privacy" class="section hidden">
+  <div class="container">
+
+    <!-- English -->
+    <div class="lang lang-en">
+      <h3 style="margin-top:40px;">Privacy Policy</h3>
+
+      <h3>No Data Collection</h3>
+      <p>AI Outbreak does not collect, transmit, or share any personal data. All game state is stored exclusively on your device using SwiftData secure local storage.</p>
+
+      <h3>Local Storage Only</h3>
+      <p>Game sessions, scores, settings, and language preferences are stored locally. AI Outbreak has no servers, no cloud sync, and no external data transmission of any kind.</p>
+
+      <h3>Game Center</h3>
+      <p>If you opt in to Game Center, Apple handles leaderboard and achievement data under their own privacy policy. This is fully optional — the game is fully playable without Game Center.</p>
+
+      <h3>No Analytics or Tracking</h3>
+      <p>AI Outbreak does not collect analytics, crash reports, usage statistics, or any tracking data. No third-party SDKs for analytics are included.</p>
+
+      <h3>No Ads</h3>
+      <p>The game contains no advertisements and no ad networks.</p>
+
+      <h3>Your Control</h3>
+      <ul>
+        <li>All data stored only on your device</li>
+        <li>Deleting the app permanently deletes all data</li>
+        <li>No copies exist with the developer or any third party</li>
+      </ul>
+
+      <h3>Contact</h3>
+      <p>Privacy questions: <a href="mailto:andres.wetzel@gmail.com">andres.wetzel@gmail.com</a></p>
+      <p><em>Developer: Andres Wetzel, Switzerland 🇨🇭</em></p>
+      <p><em>Last updated: March 2026</em></p>
+    </div>
+
+    <!-- German -->
+    <div class="lang lang-de hidden">
+      <h3 style="margin-top:40px;">Datenschutzerklärung</h3>
+
+      <h3>Keine Datenerfassung</h3>
+      <p>AI Outbreak erfasst, überträgt oder teilt keine personenbezogenen Daten. Aller Spielstand wird ausschließlich auf deinem Gerät mit sicherem lokalem SwiftData-Speicher gespeichert.</p>
+
+      <h3>Nur lokale Speicherung</h3>
+      <p>Spielsitzungen, Punktestände, Einstellungen und Sprachpräferenzen werden lokal gespeichert. AI Outbreak hat keine Server, keine Cloud-Synchronisation und keinerlei externe Datenübertragung.</p>
+
+      <h3>Game Center</h3>
+      <p>Wenn du dich für Game Center entscheidest, verwaltet Apple Bestenlisten- und Erfolgsdaten gemäß ihrer eigenen Datenschutzrichtlinie. Dies ist vollständig optional — das Spiel ist ohne Game Center vollständig spielbar.</p>
+
+      <h3>Keine Analysen oder Tracking</h3>
+      <p>AI Outbreak erfasst keine Analysen, Absturzberichte, Nutzungsstatistiken oder Tracking-Daten. Es sind keine Drittanbieter-SDKs für Analysen enthalten.</p>
+
+      <h3>Keine Werbung</h3>
+      <p>Das Spiel enthält keine Werbung und keine Werbenetzwerke.</p>
+
+      <h3>Deine Kontrolle</h3>
+      <ul>
+        <li>Alle Daten nur auf deinem Gerät gespeichert</li>
+        <li>Das Löschen der App löscht dauerhaft alle Daten</li>
+        <li>Keine Kopien beim Entwickler oder Dritten</li>
+      </ul>
+
+      <h3>Kontakt</h3>
+      <p>Datenschutzfragen: <a href="mailto:andres.wetzel@gmail.com">andres.wetzel@gmail.com</a></p>
+      <p><em>Entwickler: Andres Wetzel, Schweiz 🇨🇭</em></p>
+      <p><em>Zuletzt aktualisiert: März 2026</em></p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer>
+  © 2026 Andres Wetzel · Switzerland 🇨🇭 ·
+  <a href="mailto:andres.wetzel@gmail.com">andres.wetzel@gmail.com</a> ·
+  <a href="https://apps.apple.com/app/id6760188493" target="_blank">App Store</a>
+</footer>
+
+</body>
+</html>
